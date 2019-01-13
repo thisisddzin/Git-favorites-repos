@@ -3,18 +3,22 @@ import PropTypes from 'prop-types';
 
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import * as FavoritesActions from '../../store/actions/favorites';
+import { Creators as FavoriteActions } from '../../store/ducks/favorites';
 
 class Main extends Component {
     static propTypes = {
       removeFavorite: PropTypes.func.isRequired,
-      addFavorite: PropTypes.func.isRequired,
-      favorites: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.number,
-        name: PropTypes.string,
-        description: PropTypes.string,
-        url: PropTypes.string,
-      })).isRequired,
+      addFavoriteRequest: PropTypes.func.isRequired,
+      favorites: PropTypes.shape({
+        loading: PropTypes.bool,
+        error: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]),
+        data: PropTypes.arrayOf(PropTypes.shape({
+          id: PropTypes.number,
+          name: PropTypes.string,
+          description: PropTypes.string,
+          url: PropTypes.string,
+        })),
+      }).isRequired,
     }
 
     state = {
@@ -23,7 +27,8 @@ class Main extends Component {
 
     handleAddRepository = (e) => {
       e.preventDefault();
-      this.props.addFavorite();
+      this.props.addFavoriteRequest(this.state.inputRepository);
+      this.setState({ inputRepository: '' });
     }
 
     handleDelRepository = (id) => {
@@ -43,8 +48,10 @@ class Main extends Component {
             <button type="submit">Adicionar</button>
           </form>
           <h1>{this.state.inputRepository}</h1>
+          {!!this.props.favorites.error && <span style={{ color: '#f00' }}>{this.props.favorites.error}</span>}
+          {this.props.favorites.loading && <span>Loading...</span>}
           <ul>
-            {this.props.favorites.map(favorite => (
+            {this.props.favorites.data.map(favorite => (
               <li key={favorite.id}>
                 <p>
                   <strong>{favorite.name}</strong>
@@ -68,6 +75,6 @@ const mapStateToProps = state => ({
   favorites: state.favorites,
 });
 
-const mapDispatchToProps = dispatch => bindActionCreators(FavoritesActions, dispatch);
+const mapDispatchToProps = dispatch => bindActionCreators(FavoriteActions, dispatch);
 
 export default connect(mapStateToProps, mapDispatchToProps)(Main);
